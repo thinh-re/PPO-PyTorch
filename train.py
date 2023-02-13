@@ -88,11 +88,11 @@ def train():
 
     directory = "PPO_preTrained"
     if not os.path.exists(directory):
-          os.makedirs(directory)
+        os.makedirs(directory)
 
     directory = directory + '/' + env_name + '/'
     if not os.path.exists(directory):
-          os.makedirs(directory)
+        os.makedirs(directory)
 
 
     checkpoint_path = directory + "PPO_{}_{}_{}.pth".format(env_name, random_seed, run_num_pretrained)
@@ -141,7 +141,11 @@ def train():
     ################# training procedure ################
 
     # initialize a PPO agent
-    ppo_agent = PPO(state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip, has_continuous_action_space, action_std)
+    ppo_agent = PPO(
+        state_dim, action_dim, lr_actor, lr_critic, 
+        gamma, K_epochs, eps_clip, 
+        has_continuous_action_space, action_std
+    )
 
     # track total training time
     start_time = datetime.now().replace(microsecond=0)
