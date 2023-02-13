@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
 
-import gym
+# import gym
 import numpy as np
-import roboschool
+# import roboschool
+import gymnasium as gym
 import torch
 from PPO import PPO
 
@@ -13,18 +14,19 @@ def train():
     print("============================================================================================")
 
     ####### initialize environment hyperparameters ######
-    env_name = "RoboschoolWalker2d-v1"
+    # env_name = "RoboschoolWalker2d-v1"
+    env_name = 'CartPole-v1'
 
-    has_continuous_action_space = True  # continuous action space; else discrete
+    has_continuous_action_space = False  # continuous action space; else discrete
 
-    max_ep_len = 1000                   # max timesteps in one episode
-    max_training_timesteps = int(3e6)   # break training loop if timeteps > max_training_timesteps
+    max_ep_len = 400                   # max timesteps in one episode
+    max_training_timesteps = int(1e5)   # break training loop if timeteps > max_training_timesteps
 
-    print_freq = max_ep_len * 10        # print avg reward in the interval (in num timesteps)
+    print_freq = max_ep_len * 4        # print avg reward in the interval (in num timesteps)
     log_freq = max_ep_len * 2           # log avg reward in the interval (in num timesteps)
-    save_model_freq = int(1e5)          # save model frequency (in num timesteps)
+    save_model_freq = int(2e4)          # save model frequency (in num timesteps)
 
-    action_std = 0.6                    # starting std for action distribution (Multivariate Normal)
+    action_std = None                  # starting std for action distribution (Multivariate Normal)
     action_std_decay_rate = 0.05        # linearly decay action_std (action_std = action_std - action_std_decay_rate)
     min_action_std = 0.1                # minimum action_std (stop decay after action_std <= min_action_std)
     action_std_decay_freq = int(2.5e5)  # action_std decay frequency (in num timesteps)
@@ -34,7 +36,7 @@ def train():
 
     ################ PPO hyperparameters ################
     update_timestep = max_ep_len * 4      # update policy every n timesteps
-    K_epochs = 80               # update policy for K epochs in one PPO update
+    K_epochs = 40               # update policy for K epochs in one PPO update
 
     eps_clip = 0.2          # clip parameter for PPO
     gamma = 0.99            # discount factor
@@ -47,7 +49,7 @@ def train():
 
     print("training environment name : " + env_name)
 
-    env = gym.make(env_name)
+    env = gym.make(env_name, render_mode='rgb_array')
 
     # state space dimension
     state_dim = env.observation_space.shape[0]
@@ -164,14 +166,14 @@ def train():
     # training loop
     while time_step <= max_training_timesteps:
 
-        state = env.reset()
+        state = env.reset()[0]
         current_ep_reward = 0
 
         for t in range(1, max_ep_len+1):
 
             # select action with policy
             action = ppo_agent.select_action(state)
-            state, reward, done, _ = env.step(action)
+            state, reward, done, _, _ = env.step(action)
 
             # saving reward and is_terminals
             ppo_agent.buffer.rewards.append(reward)
@@ -247,12 +249,4 @@ def train():
 
 
 if __name__ == '__main__':
-
     train()
-    
-    
-    
-    
-    
-    
-    

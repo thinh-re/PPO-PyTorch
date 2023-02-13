@@ -1,0 +1,7 @@
+__pycache__
+*.csv
+env
+*.pth
+
+PPO_preTrained/*
+!PPO_preTrained/.gitkeep

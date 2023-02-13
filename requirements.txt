@@ -1,1 +1,8 @@
+matplotlib
+
+gymnasium
+gymnasium[classic-control]
+gymnasium[atari]
+gymnasium[accept-rom-license]
+
 torch
