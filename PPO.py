@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.distributions import MultivariateNormal
-from torch.distributions import Categorical
+from torch.distributions import Categorical, MultivariateNormal
 
 ################################## set device ##################################
 print("============================================================================================")

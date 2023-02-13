@@ -1,15 +1,12 @@
 import os
-import glob
-import time
 from datetime import datetime
 
-import torch
-import numpy as np
-
 import gym
+import numpy as np
 import roboschool
-
+import torch
 from PPO import PPO
+
 
 ################################### Training ###################################
 def train():
