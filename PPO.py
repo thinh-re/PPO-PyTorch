@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import Tensor, nn
 from torch.distributions import Categorical, MultivariateNormal
 
 ################################## set device ##################################
@@ -256,7 +256,7 @@ class PPO:
             surr2 = torch.clamp(ratios, 1-self.eps_clip, 1+self.eps_clip) * advantages
 
             # final loss of clipped objective PPO
-            loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
+            loss: Tensor = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
             
             # take gradient step
             self.optimizer.zero_grad()
@@ -269,10 +269,10 @@ class PPO:
         # clear buffer
         self.buffer.clear()
     
-    def save(self, checkpoint_path):
+    def save(self, checkpoint_path: str) -> None:
         torch.save(self.policy_old.state_dict(), checkpoint_path)
    
-    def load(self, checkpoint_path):
+    def load(self, checkpoint_path: str) -> None:
         self.policy_old.load_state_dict(torch.load(
             checkpoint_path, map_location=lambda storage, loc: storage
         ))
