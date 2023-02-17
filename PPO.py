@@ -1,3 +1,6 @@
+from typing import Tuple
+
+import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.distributions import Categorical, MultivariateNormal
@@ -37,8 +40,10 @@ class RolloutBuffer:
 class ActorCritic(nn.Module):
     def __init__(
         self, 
-        state_dim, action_dim, 
-        has_continuous_action_space, action_std_init,
+        state_dim: int, 
+        action_dim: int, 
+        has_continuous_action_space: bool, 
+        action_std_init: float,
     ):
         super(ActorCritic, self).__init__()
 
@@ -48,7 +53,7 @@ class ActorCritic(nn.Module):
             self.action_dim = action_dim
             self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)
         # actor
-        if has_continuous_action_space :
+        if has_continuous_action_space:
             self.actor = nn.Sequential(
                 nn.Linear(state_dim, 64),
                 nn.Tanh(),
@@ -74,7 +79,7 @@ class ActorCritic(nn.Module):
             nn.Linear(64, 1)
         )
         
-    def set_action_std(self, new_action_std):
+    def set_action_std(self, new_action_std: float) -> None:
         if self.has_continuous_action_space:
             self.action_var = torch.full((self.action_dim,), new_action_std * new_action_std).to(device)
         else:
@@ -85,23 +90,22 @@ class ActorCritic(nn.Module):
     def forward(self):
         raise NotImplementedError
     
-    def act(self, state):
-
+    def act(self, state: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         if self.has_continuous_action_space:
-            action_mean = self.actor(state)
+            action_mean: Tensor = self.actor(state)
             cov_mat = torch.diag(self.action_var).unsqueeze(dim=0)
             dist = MultivariateNormal(action_mean, cov_mat)
         else:
-            action_probs = self.actor(state)
+            action_probs: Tensor = self.actor(state)
             dist = Categorical(action_probs)
 
-        action = dist.sample()
-        action_logprob = dist.log_prob(action)
-        state_val = self.critic(state)
+        action: Tensor = dist.sample()
+        action_logprob: Tensor = dist.log_prob(action)
+        state_val: Tensor = self.critic(state)
 
         return action.detach(), action_logprob.detach(), state_val.detach()
     
-    def evaluate(self, state, action):
+    def evaluate(self, state: Tensor, action: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
 
         if self.has_continuous_action_space:
             action_mean = self.actor(state)
@@ -126,15 +130,15 @@ class ActorCritic(nn.Module):
 class PPO:
     def __init__(
         self, 
-        state_dim, 
-        action_dim, 
-        lr_actor, 
-        lr_critic, 
-        gamma, 
-        K_epochs, 
-        eps_clip, 
-        has_continuous_action_space, 
-        action_std_init=0.6,
+        state_dim: int,
+        action_dim: int,
+        lr_actor: float,
+        lr_critic: float,
+        gamma: float,
+        K_epochs: int,
+        eps_clip: float,
+        has_continuous_action_space: bool, 
+        action_std_init: float = 0.6,
     ):
 
         self.has_continuous_action_space = has_continuous_action_space
@@ -165,7 +169,7 @@ class PPO:
         
         self.MseLoss = nn.MSELoss()
 
-    def set_action_std(self, new_action_std):
+    def set_action_std(self, new_action_std: float) -> None:
         if self.has_continuous_action_space:
             self.action_std = new_action_std
             self.policy.set_action_std(new_action_std)
@@ -175,7 +179,7 @@ class PPO:
             print("WARNING : Calling PPO::set_action_std() on discrete action space policy")
             print("--------------------------------------------------------------------------------------------")
 
-    def decay_action_std(self, action_std_decay_rate, min_action_std):
+    def decay_action_std(self, action_std_decay_rate: float, min_action_std: float) -> None:
         print("--------------------------------------------------------------------------------------------")
         if self.has_continuous_action_space:
             self.action_std = self.action_std - action_std_decay_rate
@@ -191,8 +195,7 @@ class PPO:
             print("WARNING : Calling PPO::decay_action_std() on discrete action space policy")
         print("--------------------------------------------------------------------------------------------")
 
-    def select_action(self, state):
-
+    def select_action(self, state: np.ndarray) -> Tensor:
         if self.has_continuous_action_space:
             with torch.no_grad():
                 state = torch.FloatTensor(state).to(device)

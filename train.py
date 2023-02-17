@@ -171,7 +171,7 @@ def train():
     # training loop
     while time_step <= max_training_timesteps:
 
-        state = env.reset()[0]
+        state: np.ndarray = env.reset()[0]
         current_ep_reward = 0
 
         for t in range(1, max_ep_len+1):
